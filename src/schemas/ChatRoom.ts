@@ -9,7 +9,7 @@ type ChatRoom = Document & {
 };
 
 const ChatRoomSchema = new Schema({
-  isUsers: [
+  idUsers: [
     {
       type: Schema.Types.ObjectId,
       ref: "Users",

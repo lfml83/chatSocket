@@ -4,6 +4,7 @@ import { io } from "../http";
 import { CreateChatRoomService } from "../services/CreateChatRoomService";
 import { CreateUserService } from "../services/CreateUserService";
 import { GetAllUsersService } from "../services/GetAllUserService";
+import { GetChatRoomByUserService } from "../services/GetChatRoomByUserService";
 import { GetUserBySocketIdService } from "../services/GetUserBySockeIdService";
 
 io.on("connect", (socket) => {
@@ -27,16 +28,29 @@ io.on("connect", (socket) => {
     callback(users);
   });
 
-  socket.on("start_chat", async(data,callback) =>{
+  socket.on("start_chat", async (data, callback) => {
     const createChatRoomService = container.resolve(CreateChatRoomService);
-    const getUserBySocketIdService = container.resolve(GetUserBySocketIdService);
+    const getChaRoomByUserService = container.resolve(GetChatRoomByUserService);
+    const getUserBySocketIdService = container.resolve(
+      GetUserBySocketIdService
+    );
 
     const userLogged = await getUserBySocketIdService.execute(socket.id);
 
-    const room = await createChatRoomService.execute([data.idUser, userLogged._id]);
+    let room = await getChaRoomByUserService.execute([
+      data.idUser,
+      // eslint-disable-next-line no-underscore-dangle
+      userLogged._id,
+    ]);
 
-    callback({room});
+    if (!room) {
+      room = await createChatRoomService.execute([
+        data.idUser,
+        // eslint-disable-next-line no-underscore-dangle
+        userLogged._id,
+      ]);
+    }
 
-  })
-
+    callback({ room });
+  });
 });
