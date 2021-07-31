@@ -2,9 +2,11 @@ import { container } from "tsyringe";
 
 import { io } from "../http";
 import { CreateChatRoomService } from "../services/CreateChatRoomService";
+import { CreateMessageService } from "../services/CreateMessaService";
 import { CreateUserService } from "../services/CreateUserService";
 import { GetAllUsersService } from "../services/GetAllUserService";
 import { GetChatRoomByUserService } from "../services/GetChatRoomByUserService";
+import { GetMessageByChatRoomService } from "../services/GetMessageByChatRoomService";
 import { GetUserBySocketIdService } from "../services/GetUserBySockeIdService";
 
 io.on("connect", (socket) => {
@@ -34,6 +36,9 @@ io.on("connect", (socket) => {
     const getUserBySocketIdService = container.resolve(
       GetUserBySocketIdService
     );
+    const getMessagesByChatRoomService = container.resolve(
+      GetMessageByChatRoomService
+    );
 
     const userLogged = await getUserBySocketIdService.execute(socket.id);
 
@@ -50,7 +55,36 @@ io.on("connect", (socket) => {
         userLogged._id,
       ]);
     }
+    socket.join(room.idChatRoom); // colocar usuarios na sala
 
-    callback({ room });
+    const messages = await getMessagesByChatRoomService.execute(
+      room.idChatRoom
+    );
+
+    // buscar mensagens da sala
+
+    callback({ room, messages });
+  });
+
+  socket.on("message", async (data) => {
+    // buscar as informaçoes do usuario(socket.id)
+    const getUserBySocketIdService = container.resolve(
+      GetUserBySocketIdService
+    );
+    const createMessageService = container.resolve(CreateMessageService);
+    const user = await getUserBySocketIdService.execute(socket.id);
+    // salvas as mensagens
+    const message = await createMessageService.execute({
+      // eslint-disable-next-line no-underscore-dangle
+      to: user._id, // id do usuario que esta enviando
+      text: data.message,
+      roomId: data.idChatRoom,
+    });
+    // io comunicacao global e o socket é um cliente especifico e o servidor
+    io.to(data.idChatRoom).emit("message", {
+      message,
+      user,
+    });
+    // enviar para outros usuarios da sala
   });
 });
