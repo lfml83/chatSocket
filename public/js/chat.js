@@ -86,9 +86,10 @@ function addUser(user) {
 
 // eslint-disable-next-line no-undef
 document.getElementById("users_list").addEventListener("click", (e) => {
+  // eslint-disable-next-line no-undef
+  document.getElementById("message_user").innerHTML = "";
   if (e.target && e.target.matches("li.user_name_list")) {
     const idUser = e.target.getAttribute("idUser");
-    console.log("idUser", idUser);
 
     socket.emit("start_chat", { idUser }, (response) => {
       // eslint-disable-next-line no-const-assign

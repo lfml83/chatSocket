@@ -17,7 +17,7 @@ const ChatRoomSchema = new Schema({
   ],
   idChatRoom: {
     type: String,
-    default: uuid(),
+    default: uuid, // mpvp id par auma nova sala eh sem os parenteses senao ele cria igual
   },
 });
 
